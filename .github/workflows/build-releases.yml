@@ -8,42 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Enable Windows Desktop
-        run: flutter config --enable-windows-desktop
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Build Windows App
-        run: flutter build windows --release
-
-      - name: Create Windows Package
-        run: |
-          mkdir StudyFlow-Windows-v1.0.0
-          xcopy "build\windows\runner\Release\*" "StudyFlow-Windows-v1.0.0\" /E /I /Y
-          echo "StudyFlow for Windows v1.0.0" > StudyFlow-Windows-v1.0.0\README.txt
-          echo "" >> StudyFlow-Windows-v1.0.0\README.txt
-          echo "How to run:" >> StudyFlow-Windows-v1.0.0\README.txt
-          echo "1. Double-click studyflow.exe" >> StudyFlow-Windows-v1.0.0\README.txt
-          echo "2. Allow Windows Defender if prompted" >> StudyFlow-Windows-v1.0.0\README.txt
-          echo "" >> StudyFlow-Windows-v1.0.0\README.txt
-          echo "No installation required - just run!" >> StudyFlow-Windows-v1.0.0\README.txt
-
-      - name: Upload Windows Build
-        uses: actions/upload-artifact@v4
-        with:
-          name: StudyFlow-Windows
-          path: StudyFlow-Windows-v1.0.0/
 
   build-linux:
     runs-on: ubuntu-latest
@@ -88,33 +52,6 @@ jobs:
           name: StudyFlow-Linux
           path: StudyFlow-Linux-v1.0.0/
 
-  build-android:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '11'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Build Android APK
-        run: flutter build apk --release
-
-      - name: Upload Android APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: StudyFlow-Android
-          path: build/app/outputs/flutter-apk/app-release.apk
 
   build-macos:
     runs-on: macos-latest
@@ -153,7 +90,7 @@ jobs:
           path: StudyFlow-macOS-v1.0.0/
 
   create-release:
-    needs: [build-windows, build-linux, build-android, build-macos]
+    needs: [build-linux, build-macos]
     runs-on: ubuntu-latest
     steps:
       - name: Download All Artifacts
@@ -161,47 +98,41 @@ jobs:
 
       - name: Create Release Packages
         run: |
-          zip -r StudyFlow-Windows-v1.0.0.zip StudyFlow-Windows/
           tar -czf StudyFlow-Linux-v1.0.0.tar.gz StudyFlow-Linux/
           zip -r StudyFlow-macOS-v1.0.0.zip StudyFlow-macOS/
-          cp StudyFlow-Android/app-release.apk StudyFlow-Android-v1.0.0.apk
 
       - name: Upload Release Assets
         uses: actions/upload-artifact@v4
         with:
-          name: StudyFlow-All-Platforms
+          name: StudyFlow-Working-Platforms
           path: |
-            StudyFlow-Windows-v1.0.0.zip
             StudyFlow-Linux-v1.0.0.tar.gz
             StudyFlow-macOS-v1.0.0.zip
-            StudyFlow-Android-v1.0.0.apk
 
       - name: Create GitHub Release (if tagged)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            StudyFlow-Windows-v1.0.0.zip
             StudyFlow-Linux-v1.0.0.tar.gz
             StudyFlow-macOS-v1.0.0.zip
-            StudyFlow-Android-v1.0.0.apk
           body: |
             # StudyFlow v1.0.0
 
             ## Download for Your Platform:
 
-            - **Windows**: StudyFlow-Windows-v1.0.0.zip (Extract and run studyflow.exe)
             - **Linux**: StudyFlow-Linux-v1.0.0.tar.gz (Extract and run ./studyflow)
             - **macOS**: StudyFlow-macOS-v1.0.0.zip (Extract and drag StudyFlow.app to Applications)
-            - **Android**: StudyFlow-Android-v1.0.0.apk (Install APK file)
 
             ## Features:
             - 📚 Course Management
             - 📝 Assignment Tracking
             - 🎯 Project Organization
-            - 💾 Data Export/Import
+            - 💾 Data Export (Import temporarily disabled)
             - 🌙 Dark Theme Support
 
             No installation required - just download and run!
+
+            Note: Windows and Android builds temporarily disabled due to compatibility issues.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
