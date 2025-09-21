@@ -302,4 +302,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**StudyFlow** - Organize your academic journey with ease! 🎓✨
+**StudyFlow** - Organize your academic journey with ease! 🎓✨# studyflow
