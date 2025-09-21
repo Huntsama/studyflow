@@ -50,8 +50,8 @@ dependencies:
   # UUID for unique IDs
   uuid: ^4.2.1
 
-  # File operations
-  file_picker: ^5.5.0
+  # File operations (temporarily removed for Windows compatibility)
+  # file_picker: ^5.5.0
   path_provider: ^2.1.1
 
 dev_dependencies:

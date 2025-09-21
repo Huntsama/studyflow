@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
+// import 'package:file_picker/file_picker.dart'; // Temporarily disabled for Windows compatibility
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/course.dart';
@@ -69,21 +69,9 @@ class BackupService {
   }
 
   Future<String?> pickImportFile() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.single.path != null) {
-        return result.files.single.path;
-      }
-
-      return null;
-    } catch (e) {
-      throw Exception('Failed to pick import file: $e');
-    }
+    // Temporarily disabled for Windows compatibility
+    // TODO: Re-enable file picker when compatible version is available
+    throw Exception('File picker temporarily disabled for Windows compatibility');
   }
 
   Future<Map<String, dynamic>> loadImportData(String filePath) async {
