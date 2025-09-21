@@ -1,0 +1,200 @@
+name: Build StudyFlow Releases
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
+          channel: 'stable'
+
+      - name: Enable Windows Desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Windows App
+        run: flutter build windows --release
+
+      - name: Create Windows Package
+        run: |
+          mkdir StudyFlow-Windows-v1.0.0
+          xcopy "build\windows\runner\Release\*" "StudyFlow-Windows-v1.0.0\" /E /I /Y
+          echo "StudyFlow for Windows v1.0.0" > StudyFlow-Windows-v1.0.0\README.txt
+          echo "" >> StudyFlow-Windows-v1.0.0\README.txt
+          echo "How to run:" >> StudyFlow-Windows-v1.0.0\README.txt
+          echo "1. Double-click studyflow.exe" >> StudyFlow-Windows-v1.0.0\README.txt
+          echo "2. Allow Windows Defender if prompted" >> StudyFlow-Windows-v1.0.0\README.txt
+          echo "" >> StudyFlow-Windows-v1.0.0\README.txt
+          echo "No installation required - just run!" >> StudyFlow-Windows-v1.0.0\README.txt
+
+      - name: Upload Windows Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyFlow-Windows
+          path: StudyFlow-Windows-v1.0.0/
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
+          channel: 'stable'
+
+      - name: Install Linux Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Enable Linux Desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Linux App
+        run: flutter build linux --release
+
+      - name: Create Linux Package
+        run: |
+          mkdir StudyFlow-Linux-v1.0.0
+          cp -r build/linux/x64/release/bundle/* StudyFlow-Linux-v1.0.0/
+          echo "StudyFlow for Linux v1.0.0" > StudyFlow-Linux-v1.0.0/README.txt
+          echo "" >> StudyFlow-Linux-v1.0.0/README.txt
+          echo "How to run:" >> StudyFlow-Linux-v1.0.0/README.txt
+          echo "1. Open terminal in this folder" >> StudyFlow-Linux-v1.0.0/README.txt
+          echo "2. Run: ./studyflow" >> StudyFlow-Linux-v1.0.0/README.txt
+          echo "Or double-click studyflow in file manager" >> StudyFlow-Linux-v1.0.0/README.txt
+          echo "" >> StudyFlow-Linux-v1.0.0/README.txt
+          echo "No installation required!" >> StudyFlow-Linux-v1.0.0/README.txt
+
+      - name: Upload Linux Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyFlow-Linux
+          path: StudyFlow-Linux-v1.0.0/
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyFlow-Android
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
+          channel: 'stable'
+
+      - name: Enable macOS Desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build macOS App
+        run: flutter build macos --release
+
+      - name: Create macOS Package
+        run: |
+          mkdir StudyFlow-macOS-v1.0.0
+          cp -r build/macos/Build/Products/Release/StudyFlow.app StudyFlow-macOS-v1.0.0/
+          echo "StudyFlow for macOS v1.0.0" > StudyFlow-macOS-v1.0.0/README.txt
+          echo "" >> StudyFlow-macOS-v1.0.0/README.txt
+          echo "How to install:" >> StudyFlow-macOS-v1.0.0/README.txt
+          echo "1. Drag StudyFlow.app to Applications folder" >> StudyFlow-macOS-v1.0.0/README.txt
+          echo "2. Launch from Applications or Spotlight" >> StudyFlow-macOS-v1.0.0/README.txt
+          echo "3. Right-click → Open if security warning appears" >> StudyFlow-macOS-v1.0.0/README.txt
+
+      - name: Upload macOS Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyFlow-macOS
+          path: StudyFlow-macOS-v1.0.0/
+
+  create-release:
+    needs: [build-windows, build-linux, build-android, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release Packages
+        run: |
+          zip -r StudyFlow-Windows-v1.0.0.zip StudyFlow-Windows/
+          tar -czf StudyFlow-Linux-v1.0.0.tar.gz StudyFlow-Linux/
+          zip -r StudyFlow-macOS-v1.0.0.zip StudyFlow-macOS/
+          cp StudyFlow-Android/app-release.apk StudyFlow-Android-v1.0.0.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            StudyFlow-Windows-v1.0.0.zip
+            StudyFlow-Linux-v1.0.0.tar.gz
+            StudyFlow-macOS-v1.0.0.zip
+            StudyFlow-Android-v1.0.0.apk
+          body: |
+            # StudyFlow v1.0.0
+
+            ## Download for Your Platform:
+
+            - **Windows**: StudyFlow-Windows-v1.0.0.zip (Extract and run studyflow.exe)
+            - **Linux**: StudyFlow-Linux-v1.0.0.tar.gz (Extract and run ./studyflow)
+            - **macOS**: StudyFlow-macOS-v1.0.0.zip (Extract and drag StudyFlow.app to Applications)
+            - **Android**: StudyFlow-Android-v1.0.0.apk (Install APK file)
+
+            ## Features:
+            - 📚 Course Management
+            - 📝 Assignment Tracking
+            - 🎯 Project Organization
+            - 💾 Data Export/Import
+            - 🌙 Dark Theme Support
+
+            No installation required - just download and run!
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
