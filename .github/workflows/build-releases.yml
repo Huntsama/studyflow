@@ -53,6 +53,47 @@ jobs:
           path: StudyFlow-Linux-v1.0.0/
 
 
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      - name: Create Android Package
+        run: |
+          mkdir StudyFlow-Android-v1.0.0
+          cp build/app/outputs/flutter-apk/app-release.apk StudyFlow-Android-v1.0.0/StudyFlow-v1.0.0.apk
+          echo "StudyFlow for Android v1.0.0" > StudyFlow-Android-v1.0.0/README.txt
+          echo "" >> StudyFlow-Android-v1.0.0/README.txt
+          echo "How to install:" >> StudyFlow-Android-v1.0.0/README.txt
+          echo "1. Enable 'Unknown sources' in Android Settings > Security" >> StudyFlow-Android-v1.0.0/README.txt
+          echo "2. Copy StudyFlow-v1.0.0.apk to your Android device" >> StudyFlow-Android-v1.0.0/README.txt
+          echo "3. Tap the APK file to install" >> StudyFlow-Android-v1.0.0/README.txt
+          echo "4. Launch StudyFlow from your app drawer" >> StudyFlow-Android-v1.0.0/README.txt
+
+      - name: Upload Android Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyFlow-Android
+          path: StudyFlow-Android-v1.0.0/
+
   build-macos:
     runs-on: macos-latest
     steps:
@@ -90,7 +131,7 @@ jobs:
           path: StudyFlow-macOS-v1.0.0/
 
   create-release:
-    needs: [build-linux, build-macos]
+    needs: [build-linux, build-android, build-macos]
     runs-on: ubuntu-latest
     steps:
       - name: Download All Artifacts
@@ -99,14 +140,16 @@ jobs:
       - name: Create Release Packages
         run: |
           tar -czf StudyFlow-Linux-v1.0.0.tar.gz StudyFlow-Linux/
+          zip -r StudyFlow-Android-v1.0.0.zip StudyFlow-Android/
           zip -r StudyFlow-macOS-v1.0.0.zip StudyFlow-macOS/
 
       - name: Upload Release Assets
         uses: actions/upload-artifact@v4
         with:
-          name: StudyFlow-Working-Platforms
+          name: StudyFlow-All-Platforms
           path: |
             StudyFlow-Linux-v1.0.0.tar.gz
+            StudyFlow-Android-v1.0.0.zip
             StudyFlow-macOS-v1.0.0.zip
 
       - name: Create GitHub Release (if tagged)
@@ -115,6 +158,7 @@ jobs:
         with:
           files: |
             StudyFlow-Linux-v1.0.0.tar.gz
+            StudyFlow-Android-v1.0.0.zip
             StudyFlow-macOS-v1.0.0.zip
           body: |
             # StudyFlow v1.0.0
@@ -122,6 +166,7 @@ jobs:
             ## Download for Your Platform:
 
             - **Linux**: StudyFlow-Linux-v1.0.0.tar.gz (Extract and run ./studyflow)
+            - **Android**: StudyFlow-Android-v1.0.0.zip (Contains APK for installation)
             - **macOS**: StudyFlow-macOS-v1.0.0.zip (Extract and drag StudyFlow.app to Applications)
 
             ## Features:
@@ -133,6 +178,6 @@ jobs:
 
             No installation required - just download and run!
 
-            Note: Windows and Android builds temporarily disabled due to compatibility issues.
+            Note: Windows builds temporarily disabled due to compatibility issues.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
