@@ -40,7 +40,7 @@ class StudyFlowApp extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: settings.highContrast ? 4 : 2,
         color: colorScheme.surface,
         surfaceTintColor: isDark ? colorScheme.primary.withOpacity(0.05) : null,
@@ -87,7 +87,7 @@ class StudyFlowApp extends StatelessWidget {
         textColor: colorScheme.onSurface,
         iconColor: colorScheme.onSurface.withOpacity(0.7),
       ),
-      tabBarTheme: TabBarThemeData(
+      tabBarTheme: TabBarTheme(
         labelColor: colorScheme.primary,
         unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
         indicatorColor: colorScheme.primary,
