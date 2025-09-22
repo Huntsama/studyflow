@@ -40,15 +40,10 @@ class StudyFlowApp extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-      cardTheme: CardTheme(
-        elevation: settings.highContrast ? 4 : 2,
-        color: colorScheme.surface,
-        surfaceTintColor: isDark ? colorScheme.primary.withOpacity(0.05) : null,
+      cardTheme: CardThemeData(
+        elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: settings.highContrast
-              ? BorderSide(color: colorScheme.outline, width: 1)
-              : BorderSide.none,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -87,17 +82,13 @@ class StudyFlowApp extends StatelessWidget {
         textColor: colorScheme.onSurface,
         iconColor: colorScheme.onSurface.withOpacity(0.7),
       ),
-      tabBarTheme: TabBarTheme(
-        labelColor: colorScheme.primary,
-        unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
-        indicatorColor: colorScheme.primary,
+      tabBarTheme: TabBarThemeData(
         indicatorSize: TabBarIndicatorSize.label,
         labelStyle: const TextStyle(fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-        dividerColor: colorScheme.outline.withOpacity(0.2),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: colorScheme.surfaceVariant,
+        backgroundColor: colorScheme.surface,
         labelStyle: TextStyle(
           color: colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w500,
